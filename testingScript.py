@@ -1,19 +1,26 @@
 import requests
 import time
+import twilioAuth
 
-URL = ""
+URL = "http://localhost:5000"
 
-r = requests.post(URL + "/login", json={"name": "Caller"})
+s = requests.Session()
 
-r = requests.post(URL + "/reminders", json={"info": "Take medication", "time": time.time() + 20})
+r = s.post(URL + "/login", data={"name": "Caller"})
 
-r = requests.get(URL + "/reminders")
+cookies = r.cookies
+
+r = s.post(URL + "/reminders", data={"info": "Take medication", "time": time.time() + 20}, cookies=cookies)
+
+r = s.get(URL + "/reminders")
 
 data = r.json()["reminders"]
 
 reminderToUpdate = {}
 for reminderDict in data:
-  if reminderDict["info" == "Take medication"]:
-    reminderToUpdate = reminderDict
+    if reminderDict["info"] == "Take medication":
+        reminderToUpdate = reminderDict
+        break
 
-r = requests.post(URL + "/update_reminder", json=reminderDict)
+reminderToUpdate['callee'] = twilioAuth.participant1
+r = s.post(URL + "/update_reminder", data=reminderDict, cookies=cookies)

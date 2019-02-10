@@ -13,6 +13,7 @@ import twilioAuth
 import time
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "HACKDAVIS"
 
 db = firestore.Client()
 reminders_collection = db.collection(u'reminders')
@@ -41,13 +42,14 @@ def logout():
 def login():
     # assign session vars: name, TwilioID
     data = request.form.to_dict()
-
+    print(data)
     if data["name"] == "Caller":
         session["name"] = "John"
         session["twilioID"] = twilioAuth.participant0
     else:
         session["name"] = "Alice"
         session["twilioID"] = twilioAuth.participant1
+    print(session)
     return redirect(url_for('success'))
 
 def create_reminder(data):
@@ -65,7 +67,8 @@ def create_reminder(data):
     reminders_collection.add(new_reminder)
 
 def valid_reminder_data(data):
-    return data['info'] and data['time']
+    print(session)
+    return session.get('twilioID', False) and data.get('info', False) and data.get('time', False)
 
 def reminder_to_dict(reminder):
     id_ = reminder.id
@@ -107,11 +110,11 @@ def update_reminder():
 
     reminders_collection.document(data['id']).set(data)
 
-    timeToReminder = time.time() - data['time']
+    timeToReminder = time.time() - float(data['time'])
     calleeName = session['name']  # FIXME: this is the name of caller, it should be inverted!!!
 
-    sendCallMessageArguments = [data['caller'], calleeName, data['reminder']]
-    timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
-    timer.start()
+    sendCallMessageArguments = [data['caller'], calleeName, data['info']]
+    
+    twilioApiCalls.SendCallMessage(data['caller'], calleeName, data['info'])
 
     return redirect(url_for('success'))
