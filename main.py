@@ -49,7 +49,7 @@ def login():
   return redirect(url_for('success'))
 
 def create_reminder(data):
-    callee = data['callee']
+    callee = session['twilioID']
     info = data['info']
     time = data['time']
     new_reminder = {
@@ -61,7 +61,7 @@ def create_reminder(data):
     reminders_collection.add(new_reminder)
 
 def valid_reminder_data(data):
-    return data['callee'] and data['info'] and data['time']
+    return data['info'] and data['time']
 
 def reminder_to_dict(reminder):
     id_ = reminder.id
@@ -98,12 +98,14 @@ def update_reminder():
   if not valid_reminder_data(data):
     return redirect(url_for('failure'))
 
+  data["caller"] = session["twilioID"]
+
   reminders_collection.document(data['id']).set(data)
 
   timeToReminder = time.time() - data['time']
-  calleeName = session['name']
+  calleeName = session['name']  # FIXME: this is the name of caller, it should be inverted!!!
 
-  sendCallMessageArguments = [data['callee'], calleeName, data['reminder']]
+  sendCallMessageArguments = [data['caller'], calleeName, data['reminder']]
   timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
   timer.start()
 
