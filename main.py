@@ -25,19 +25,25 @@ def failure():
     return "{\"success\": false}"
 
 def create_reminder(data):
-    caller = data['caller']
+    callee = data['callee']
     info = data['info']
     time = data['time']
     new_reminder = {
-        "caller": caller,
-        "callee": -1,
+        "callee": callee,
+        "caller": -1,
         "info": info,
         "time": time
     }
     reminders_collection.add(new_reminder)
 
 def valid_reminder_data(data):
-    return data['caller'] and data['info'] and data['time']
+    return data['callee'] and data['info'] and data['time']
+
+def reminder_to_dict(reminder):
+    id_ = reminder.id
+    reminder_dict = reminder.to_dict()
+    reminder_dict['id'] = id_
+    return reminder_dict
 
 @app.route("/reminders", methods=['POST', 'GET'])
 def reminders():
@@ -52,7 +58,8 @@ def reminders():
 
     if request.method == 'GET':
         all_reminders = reminders_collection.get()
-        all_reminders = [reminder.to_dict() for reminder in all_reminders]
+        all_reminders = [reminder_to_dict(reminder) for reminder in all_reminders]
+        all_reminders = [reminder for reminder in all_reminders if reminder['caller'] == -1]
         for i in range(len(all_reminders)):
             time = all_reminders[i]['time']
             all_reminders[i]['time'] = time.timestamp()
