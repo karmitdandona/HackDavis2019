@@ -33,22 +33,22 @@ def failure():
 
 @app.route("/logout", methods=['GET', 'POST'])
 def logout():
-  session.pop("name")
-  session.pop("twilioID")
-  return redirect(url_for('login'))
+    session.pop("name")
+    session.pop("twilioID")
+    return redirect(url_for('login'))
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
-  # assign session vars: name, TwilioID
-  data = request.form.to_dict()
+    # assign session vars: name, TwilioID
+    data = request.form.to_dict()
 
-  if data["name"] == "Caller":
-    session["name"] = "John"
-    session["twilioID"] = twilioAuth.participant0
-  else:
-    session["name"] = "Alice"
-    session["twilioID"] = twilioAuth.participant1
-  return redirect(url_for('success'))
+    if data["name"] == "Caller":
+        session["name"] = "John"
+        session["twilioID"] = twilioAuth.participant0
+    else:
+        session["name"] = "Alice"
+        session["twilioID"] = twilioAuth.participant1
+    return redirect(url_for('success'))
 
 def create_reminder(data):
     callee = session['twilioID']
@@ -103,15 +103,15 @@ def update_reminder():
     if not valid_reminder_data(data):
         return redirect(url_for('failure'))
 
-  data["caller"] = session["twilioID"]
+    data["caller"] = session["twilioID"]
 
-  reminders_collection.document(data['id']).set(data)
+    reminders_collection.document(data['id']).set(data)
 
-  timeToReminder = time.time() - data['time']
-  calleeName = session['name']  # FIXME: this is the name of caller, it should be inverted!!!
+    timeToReminder = time.time() - data['time']
+    calleeName = session['name']  # FIXME: this is the name of caller, it should be inverted!!!
 
-  sendCallMessageArguments = [data['caller'], calleeName, data['reminder']]
-  timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
-  timer.start()
+    sendCallMessageArguments = [data['caller'], calleeName, data['reminder']]
+    timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
+    timer.start()
 
     return redirect(url_for('success'))
