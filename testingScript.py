@@ -11,7 +11,7 @@ r = s.post(URL + "/login", data={"name": "Caller"})
 
 cookies = r.cookies
 
-r = s.post(URL + "/reminders", data={"info": "Check on Grandma Louise", "time": time.time() + 20}, cookies=cookies)
+r = s.post(URL + "/reminders", data={"info": "Check on Grandma Louise", "time": time.time() + 40}, cookies=cookies)
 
 r = s.get(URL + "/reminders")
 

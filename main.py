@@ -45,21 +45,23 @@ def login():
     print(data)
     if data["name"] == "Caller":
         session["name"] = "John"
-        session["twilioID"] = twilioAuth.participant0
-    else:
-        session["name"] = "Alice"
         session["twilioID"] = twilioAuth.participant1
+    else:
+        session["name"] = "Mary"
+        session["twilioID"] = twilioAuth.participant0
     print(session)
     return redirect(url_for('success'))
 
 def create_reminder(data):
-    callee = session['twilioID']
+    callee = twilioAuth.participant1  # always KP40 (Mary)
     info = data['info']
     time = data['time']
+    name = "Mary"  # should always be Mary, since Mary is always callee
     if type(time) == str:
         time = float(time)
     new_reminder = {
         "callee": callee,
+        "name": name,
         "caller": EMPTY_CALLER,
         "info": info,
         "time": datetime.fromtimestamp(time)
@@ -68,7 +70,8 @@ def create_reminder(data):
 
 def valid_reminder_data(data):
     print(session)
-    return session.get('twilioID', False) and data.get('info', False) and data.get('time', False)
+    # return session.get('twilioID', False) and data.get('info', False) and data.get('time', False)
+    return data.get('info', False) and data.get('time', False)
 
 def reminder_to_dict(reminder):
     id_ = reminder.id
@@ -106,14 +109,12 @@ def update_reminder():
     if not valid_reminder_data(data):
         return redirect(url_for('failure'))
 
-    data["caller"] = session["twilioID"]
+    data["caller"] = twilioAuth.participant1  # John (always the caller)
 
     reminders_collection.document(data['id']).set(data)
 
     timeToReminder = time.time() - float(data['time'])
-    calleeName = session['name']  # FIXME: this is the name of caller, it should be inverted!!!
-
-    sendCallMessageArguments = [data['caller'], calleeName, data['info']]
+    calleeName = data['name']  # (should always be Mary)
     
     twilioApiCalls.SendCallMessage(data['caller'], calleeName, data['info'])
 
