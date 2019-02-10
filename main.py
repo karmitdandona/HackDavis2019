@@ -2,10 +2,15 @@ from flask import redirect
 from flask import url_for
 from flask import request
 from flask import Flask
+from flask import session
 from google.cloud import firestore
 from json import loads as json_load
 from json import dumps as json_create
 from datetime import datetime
+import threading
+import twilioApiCalls
+import twilioAuth
+import time
 
 app = Flask(__name__)
 
@@ -23,6 +28,25 @@ def success():
 @app.route("/failure")
 def failure():
     return "{\"success\": false}"
+
+@app.route("/logout", methods=['GET'])
+def logout():
+  session.pop("name")
+  session.pop("twilioID")
+  return redirect(url_for('login'))
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+  # assign session vars: name, TwilioID
+  data = request.form.to_dict()
+
+  if data["name"] == "Caller":
+    session["name"] = "John"
+    session["twilioID"] = twilioAuth.participant0
+  else:
+    session["name"] = "Alice"
+    session["twilioID"] = twilioAuth.participant1
+  return redirect(url_for('success'))
 
 def create_reminder(data):
     caller = data['caller']
@@ -68,3 +92,11 @@ def update_reminder():
     return redirect(url_for('failure'))
 
   reminders_collection.document(data['id']).set(data)
+
+  timeToReminder = time.time() - data['time']
+  calleeName = session['name']
+
+  sendCallMessageArguments = [data['callee'], calleeName, data['reminder']]
+  timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
+
+  return redirect(url_for('success'))
