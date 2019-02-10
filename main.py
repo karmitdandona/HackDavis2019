@@ -41,15 +41,14 @@ def logout():
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     # assign session vars: name, TwilioID
-    data = request.form.to_dict()
-    print(data)
+    # data = request.form.to_dict()
+    data = request.get_json()
     if data["name"] == "Caller":
         session["name"] = "John"
         session["twilioID"] = twilioAuth.participant1
     else:
         session["name"] = "Mary"
         session["twilioID"] = twilioAuth.participant0
-    print(session)
     return redirect(url_for('success'))
 
 def create_reminder(data):
@@ -69,7 +68,6 @@ def create_reminder(data):
     reminders_collection.add(new_reminder)
 
 def valid_reminder_data(data):
-    print(session)
     # return session.get('twilioID', False) and data.get('info', False) and data.get('time', False)
     return data.get('info', False) and data.get('time', False)
 
@@ -82,7 +80,8 @@ def reminder_to_dict(reminder):
 @app.route("/reminders", methods=['POST', 'GET'])
 def reminders():
     if request.method == 'POST':
-        data = request.form.to_dict()
+        # data = request.form.to_dict()
+        data = request.get_json()
 
         if not valid_reminder_data(data):
             return redirect(url_for('failure'))
@@ -104,7 +103,8 @@ def reminders():
 @app.route("/update_reminder", methods=['POST'])
 def update_reminder():
     """Overwrites a reminder with provided json (for when caller is updated)"""
-    data = request.form.to_dict()
+    # data = request.form.to_dict()
+    data = request.get_json()
 
     if not valid_reminder_data(data):
         return redirect(url_for('failure'))
