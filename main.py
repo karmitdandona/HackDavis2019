@@ -4,6 +4,7 @@ from google.cloud import firestore
 app = Flask(__name__)
 
 db = firestore.Client()
+reminders = db.collection(u'reminders')
 
 @app.route("/")
 def index():
