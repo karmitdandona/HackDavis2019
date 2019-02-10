@@ -29,7 +29,7 @@ def success():
 def failure():
     return "{\"success\": false}"
 
-@app.route("/logout", methods=['GET'])
+@app.route("/logout", methods=['GET', 'POST'])
 def logout():
   session.pop("name")
   session.pop("twilioID")
@@ -105,5 +105,6 @@ def update_reminder():
 
   sendCallMessageArguments = [data['callee'], calleeName, data['reminder']]
   timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
+  timer.start()
 
   return redirect(url_for('success'))
