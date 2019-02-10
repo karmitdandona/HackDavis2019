@@ -58,3 +58,13 @@ def reminders():
             all_reminders[i]['time'] = time.timestamp()
         all_reminders_dict = {"reminders": all_reminders}
         return json_create(all_reminders_dict)
+
+@app.route("/update_reminder", methods=['POST'])
+def update_reminder():
+  """Overwrites a reminder with provided json (for when caller is updated)"""
+  data = request.form.to_dict()
+
+  if not valid_reminder_data(data):
+    return redirect(url_for('failure'))
+
+  reminders_collection.document(data['id']).set(data)
