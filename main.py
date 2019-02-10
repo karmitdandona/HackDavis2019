@@ -17,6 +17,8 @@ app = Flask(__name__)
 db = firestore.Client()
 reminders_collection = db.collection(u'reminders')
 
+EMPTY_CALLER = -1
+
 @app.route("/")
 def index():
     return "Hello World!"
@@ -52,11 +54,13 @@ def create_reminder(data):
     callee = session['twilioID']
     info = data['info']
     time = data['time']
+    if type(time) == str:
+        time = float(time)
     new_reminder = {
         "callee": callee,
-        "caller": -1,
+        "caller": EMPTY_CALLER,
         "info": info,
-        "time": time
+        "time": datetime.fromtimestamp(time)
     }
     reminders_collection.add(new_reminder)
 
@@ -86,17 +90,18 @@ def reminders():
         all_reminders = [reminder for reminder in all_reminders if reminder['caller'] == -1]
         for i in range(len(all_reminders)):
             time = all_reminders[i]['time']
-            all_reminders[i]['time'] = time.timestamp()
+            if isinstance(time, datetime):
+                all_reminders[i]['time'] = time.timestamp()
         all_reminders_dict = {"reminders": all_reminders}
         return json_create(all_reminders_dict)
 
 @app.route("/update_reminder", methods=['POST'])
 def update_reminder():
-  """Overwrites a reminder with provided json (for when caller is updated)"""
-  data = request.form.to_dict()
+    """Overwrites a reminder with provided json (for when caller is updated)"""
+    data = request.form.to_dict()
 
-  if not valid_reminder_data(data):
-    return redirect(url_for('failure'))
+    if not valid_reminder_data(data):
+        return redirect(url_for('failure'))
 
   data["caller"] = session["twilioID"]
 
@@ -109,4 +114,4 @@ def update_reminder():
   timer = threading.Timer(timeToReminder, twilioApiCalls.SendCallMessage, sendCallMessageArguments)
   timer.start()
 
-  return redirect(url_for('success'))
+    return redirect(url_for('success'))
